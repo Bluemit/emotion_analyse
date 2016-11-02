@@ -10,18 +10,29 @@ class WeiboSpider(scrapy.Spider):
     name = "weibo"
 
     def start_requests(self):
-        # url = 'http://weibo.cn/search/mblog/?keyword=%23G20%23&vt=4&PHPSESSID=&page='
-        url = 'http://s.weibo.com/weibo/G20&b=1&page='
+        urls = ['http://s.weibo.com/weibo/G20&typeall=1&suball=1&timescope=custom:2016-09-05-0:2016-09-19-21&page=', 'http://s.weibo.com/weibo/G20&typeall=1&suball=1&timescope=custom:2016-08-30-0:2016-09-06-15&page=', 'http://s.weibo.com/weibo/%25E4%25BA%25BA%25E6%25B0%2591%25E5%25B8%2581%2520SDR&xsort=hot&suball=1&timescope=custom:2016-10-01-0:2016-10-02-0&page=', 'http://s.weibo.com/weibo/G20&typeall=1&suball=1&timescope=custom:2016-07-25-0:2016-08-10-0&page=']
+        cnts = [47, 45, 47, 47]
+
         cookie_dict = {}
-        
-        cnt = 1
-        while (cnt <= 50):
-            yield FormRequest(url=url+str(cnt), callback=self.parse, cookies=cookie_dict)
-            cnt += 1
+        cookie_dict['_T_WM'] = '***'
+        cookie_dict['WEIBOCN_FROM'] = 'feed'
+        cookie_dict['ALF'] = '147919****'
+        cookie_dict['SCF'] = '***'
+        cookie_dict['SUBP'] = '***'
+        cookie_dict['SUHB'] = '***
+        cookie_dict['SSOLoginState'] = '147660****'
+        cookie_dict['SUB'] = '***'
+        cookie_dict['gsid_CTandWM'] = '***'
+
+        i = 0
+        while(i < len(urls)):
+            cnt = 1
+            while (cnt <= cnts[i]):
+                yield FormRequest(url=urls[i]+str(cnt), callback=self.parse, cookies=cookie_dict)
+                cnt += 1
+            i += 1
 
     def parse(self, response):
-        print response.body
-        f = file('1.html', 'w')
         num = 0
         for item in response.body.split('<script>STK && STK.pageletM && STK.pageletM.view('):
             if(num==0):
@@ -34,7 +45,7 @@ class WeiboSpider(scrapy.Spider):
     def finditem(self, soup):
         for item in soup.find_all('div', attrs={'class':'WB_cardwrap'}):
             if item.find('div', class_='feed_content'):
-                f = file('1.txt', 'a+')
+                f = file('bu.txt', 'a+')
                 comment_txt = item.find('p', class_='comment_txt').get_text().strip().split(u'展开全文')[0].strip('.').strip()
                 f.write(comment_txt.encode('utf-8'))
                 f.write('\t')
@@ -59,32 +70,3 @@ class WeiboSpider(scrapy.Spider):
                     cnt += 1
                 f.write('\n')
                 f.close()
-        # print response.body
-        # soup = BeautifulSoup(response.body, 'lxml', from_encoding='utf8')
-        # f.write(str(soup))
-        # f.close
-        # print soup.find_all('div', class_=)
-        # print soup.find_all('div', attrs={'class':'WB_cardwrap'})
-        # allow_element = [u'赞', u'转', u'评']
-        # for item in soup.find_all('div', class_='c'):
-        #     pos = 0
-        #     for elements in item.children:
-        #         try:
-        #             if elements.find('span', class_='ctt'):
-        #                 item_text = ''
-        #                 for part in elements.find('span', class_='ctt').children:
-        #                     if isinstance(part, NavigableString):
-        #                         item_text += part
-        #                     else:
-        #                         item_text += part.get_text()
-        #                 print item_text.lstrip(':'),
-        #         except TypeError:
-        #             continue
-        #         if isinstance(elements, NavigableString):
-        #             continue
-        #         for element in elements.children:
-        #             if isinstance(element, NavigableString):
-        #                 continue
-        #             if element.get_text()[0:1] in allow_element:
-        #                 print element.get_text(),
-        #         print
